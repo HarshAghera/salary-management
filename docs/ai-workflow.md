@@ -41,7 +41,11 @@ Recorded as they happen, so the review shows judgment rather than just generatio
 |---|---|---|
 | Scope | Excel import/export initially proposed as out of scope | Brought into scope: HR's data lives in spreadsheets today, so import/export is the realistic migration path. Narrowed to .xlsx, all-or-nothing, never deleting. |
 | Import limit | 10,000 rows / 5 MB per file | Reduced to 1,000 rows / 1 MB. Import is for routine batches; the seed script loads the full organization. The smaller cap keeps a whole file to one upsert on a 0.1 vCPU instance. |
-
+| Salary storage | Documentation said salaries are "never floating point", which reads as "whole numbers only" | Kept exact `numeric(12,2)` storage and made two-decimal support explicit in the requirements, ADR-6, `CLAUDE.md` and validation tests. |
+| Commit structure | Generated scaffold imported the employee entity and module before they existed, so that commit could not build on its own | Each module is now wired in by the commit that creates it; every commit builds and passes its tests independently. |
+| Performance claim | Local response times of 300–640 ms appeared to miss the 300 ms target | Measured database execution separately (0.4–23 ms per query) and identified network latency as the cause; both figures are recorded rather than a single misleading number. |
+| Error messages | Library defaults such as "must be a valid ISO 8601 date string" | Rewritten in HR's terms and mapped to spreadsheet column names, found during manual verification of the import. |
+| Integration test database | Run the integration tests in a local Docker container | No Docker dependency: the suite accepts any PostgreSQL database named `*_test`. CI provides its own, and locally a separate `salary_test` database in the existing Supabase project was used. |
 ## Prompt log
 
 Key prompts are kept in [`prompts/`](prompts/), one file per phase. Each entry records the intent, the prompt, the outcome, and the human decision that set the direction.
@@ -49,3 +53,4 @@ Key prompts are kept in [`prompts/`](prompts/), one file per phase. Each entry r
 | Phase | File |
 |---|---|
 | 01 — Planning and requirements | [prompts/01-planning.md](prompts/01-planning.md) |
+| 02 — Backend | [prompts/02-backend.md](prompts/02-backend.md) |
