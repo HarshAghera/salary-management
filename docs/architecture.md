@@ -194,6 +194,7 @@ Touch targets are at least 44 × 44 px, and nothing depends on hover to be disco
 | Export | Rows are written to the response as the workbook is generated, so the file is never assembled in memory first. Measured: all 10,000 employees export in about 3 s |
 | Seeding | One transaction of 1,000-row batched inserts; 10,000 rows in about 12 s even over a 300 ms round trip from a laptop |
 | Measured query time | At 10,000 employees, Postgres executes the country summary in ~14 ms, a job-title breakdown in ~2 ms, a filtered directory page in under 1 ms and a name/email search in ~23 ms. End-to-end latency is dominated by the network round trip between API and database. |
+| Deployed response time | API on Render and database on Supabase, both in Singapore. Median per request, measured from a client in India (~45 ms away): health 127 ms, directory page 131–134 ms, search 185 ms, filter options 138 ms, insights 126–134 ms, all within the 300 ms target. With the database in Sydney the same requests took 298–369 ms, which is why API and database are co-located (ADR-10). |
 
 ## Testing strategy
 

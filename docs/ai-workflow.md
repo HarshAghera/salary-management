@@ -45,6 +45,7 @@ Recorded as they happen, so the review shows judgment rather than just generatio
 | Commit structure | Generated scaffold imported the employee entity and module before they existed, so that commit could not build on its own | Each module is now wired in by the commit that creates it; every commit builds and passes its tests independently. |
 | Performance claim | Local response times of 300–640 ms appeared to miss the 300 ms target | Measured database execution separately (0.4–23 ms per query) and identified network latency as the cause; both figures are recorded rather than a single misleading number. |
 | Error messages | Library defaults such as "must be a valid ISO 8601 date string" | Rewritten in HR's terms and mapped to spreadsheet column names, found during manual verification of the import. |
+| Database region | Deploy the API in Render's Singapore region as the "closest" to a Sydney database | Measured instead of assumed: ~260 ms of every request was cross-region network. The database was moved to Singapore, cutting responses from 298–369 ms to 126–185 ms. |
 | Integration test database | Run the integration tests in a local Docker container | No Docker dependency: the suite accepts any PostgreSQL database named `*_test`. CI provides its own, and locally a separate `salary_test` database in the existing Supabase project was used. |
 ## Prompt log
 

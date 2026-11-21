@@ -5,8 +5,8 @@ services:
     name: salary-management-api
     runtime: node
     plan: free
-    # Closest Render region to the Supabase database (ap-southeast-2, Sydney):
-    # every request makes one to three database round trips, so distance is latency.
+    # Same region as the Supabase database (ap-southeast-1, Singapore): every request
+    # makes one to three database round trips, so distance is latency (ADR-10).
     region: singapore
     buildCommand: npm ci && npm run build -w backend
     # The free plan has no pre-deploy step, so pending migrations run before the API

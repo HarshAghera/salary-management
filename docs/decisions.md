@@ -143,9 +143,9 @@ Short records of significant decisions: the context, what was decided, and the t
 ## ADR-10: Deploy the API as a Render Blueprint, migrating on start
 **Status:** Accepted
 
-**Context:** The API runs on Render's free plan, which has no pre-deploy step for running migrations and puts the instance to sleep after 15 minutes without traffic. The database is on Supabase in Sydney.
+**Context:** The API runs on Render's free plan, which has no pre-deploy step for running migrations and puts the instance to sleep after 15 minutes without traffic. Every request makes one to three database round trips, so the distance between API and database is added to every response.
 
-**Decision:** The service is described in `render.yaml` (infrastructure as code) in the Singapore region, the closest Render region to the database. The start command runs pending migrations from the compiled build, then starts the API. `/health` checks database connectivity and is Render's health check, so a deploy that cannot reach the database is never put into service.
+**Decision:** The service is described in `render.yaml` (infrastructure as code) and runs in Render's Singapore region, with the Supabase database in the same region (`ap-southeast-1`). The start command runs pending migrations from the compiled build, then starts the API. `/health` checks database connectivity and is Render's health check, so a deploy that cannot reach the database is never put into service.
 
 **Alternatives considered:**
 - *Run migrations automatically inside the app (`migrationsRun`)* — hides schema changes in application startup; an explicit command is easier to see and to run by hand.
@@ -154,5 +154,6 @@ Short records of significant decisions: the context, what was decided, and the t
 **Consequences:**
 - ➕ The deployment is reproducible from the repository; secrets stay in Render's dashboard.
 - ➕ A deploy always runs against the current schema, and a broken database connection fails the health check instead of serving errors.
+- ➕ Co-location was measured, not assumed. With the database in Sydney, a trivial `/health` request took a median of 312 ms and the slowest endpoint 369 ms, almost all of it network between the two regions. After moving the database to Singapore (a new project, rebuilt with the scripted migration and the deterministic seed in seconds), the same requests took 126–185 ms end to end from a client in India.
 - ➖ Migrations run on every start. They are idempotent, so this costs one quick query when there is nothing to apply. It would need revisiting with several instances, which the free plan does not use.
 - ➖ The first request after a period of inactivity waits for the instance to wake up (typically under a minute). Acceptable for an internal tool and its demo; a paid instance removes it.

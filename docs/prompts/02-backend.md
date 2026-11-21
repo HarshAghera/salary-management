@@ -12,6 +12,7 @@ Key prompts from the session.
 | 4 | Add filter options, seed data and salary insights | `filter-options`, deterministic 10,000-employee seed, three insight endpoints |
 | 5 | Add Excel import and export | Template, all-or-nothing import, filtered export, ADR-9 |
 | 6 | Audit the backend against the brief and close the gaps | Requirements audit, 20 integration tests against PostgreSQL, CI database service |
+| 7 | Add linting, a health check and deploy the API | ESLint in CI, `/health`, Render Blueprint, ADR-10, measured latency within target |
 
 ---
 
@@ -122,3 +123,18 @@ The database was then reset to the deterministic seed. Recorded as ADR-9.
 **Outcome:** The audit found every functional requirement implemented and verified. The remaining gaps were deployment, the health check, end-to-end latency (which needs a deployed API), integration tests and linting. The integration suite has 20 tests in four files and runs through the same services the API uses. It refuses any database whose name does not end in `_test`. The CLI data source was moved to its own module, so tests can import the shared configuration without reading the app's environment. CI now starts a throwaway Postgres 16 service and runs the suite on every push. All 20 tests passed locally against a separate `salary_test` database in the project's Supabase instance, and the main database was confirmed untouched (still 10,000 employees).
 
 **Human decision:** The integration tests must not require Docker. Any PostgreSQL works: CI provides its own, and locally a separate `_test` database in the existing Supabase project, a local install, or a container are all documented options. The live data is never used for tests.
+
+---
+
+### 7. Add linting, a health check and deploy the API
+
+**Intent:** Finish the backend phase with the remaining gaps closed: lint in CI as `CLAUDE.md` requires, a health check, and a deployed API that meets the 300 ms target when measured, not assumed.
+
+> 1. Add ESLint with type-aware rules for the backend: catch un-awaited promises, ban `any` as `CLAUDE.md` requires, and run it in CI. Fix what it finds.
+> 2. Add `GET /health` that checks database connectivity and returns 503 when the database is unreachable, so the host can hold back a broken deploy.
+> 3. Describe the Render deployment as code in `render.yaml`. The free plan has no pre-deploy step, so run the compiled migrations before the API starts. Record the decision and its trade-offs as an ADR.
+> 4. Once it is live, measure every endpoint from a client over a warm connection, separate network time from server time, and compare against the 300 ms target.
+
+**Outcome:** ESLint's first run found five issues and no bugs (an `async` mock with no `await`, a stale disable comment, and Jest matchers typed as `any`); lint now runs in CI. `/health` performs a real `SELECT 1` and has unit and integration tests. The Blueprint deploys to Render's Singapore region with `/health` as the health check, recorded as ADR-10. The first measurement found every request taking 298–369 ms: queries added only 0–60 ms over a trivial `SELECT 1`, so about 260 ms per request was the round trip between Render in Singapore and Supabase in Sydney. A new Supabase project in Singapore was rebuilt from the scripted migration and the deterministic seed in under ten seconds (identical data), and the integration suite passed against its `salary_test` database. The deployed API then measured 126–185 ms per request from a client in India, all within target.
+
+**Human decision:** Co-locate the database with the API rather than accept latency at the edge of the target: move the database to Supabase's specific Singapore region, choosing the region explicitly because the general "Asia-Pacific" option placed the project in Tokyo.

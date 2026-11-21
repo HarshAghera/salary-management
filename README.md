@@ -5,7 +5,7 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 | | |
 |---|---|
 | **Live app** | _coming soon_ |
-| **API** | _coming soon_ |
+| **API** | [salary-management-api-fw2q.onrender.com](https://salary-management-api-fw2q.onrender.com/health) (free instance: the first request after a pause can take up to a minute) |
 | **Video demo** | _coming soon_ |
 
 ## Features
@@ -75,10 +75,11 @@ npm run test:integration -w backend
 
 The API is deployed to Render from [`render.yaml`](render.yaml) (see ADR-10):
 
-1. In Render, choose **New → Blueprint** and select this repository.
-2. Set `DATABASE_URL` to the Supabase **session pooler** connection string and `CORS_ORIGIN` to the frontend's URL.
-3. Deploy. On every start the service runs pending migrations, then starts the API; Render's health check calls `/health`, which also checks the database.
-4. Load the data once, from a local machine with `DATABASE_URL` pointing at the same database: `npm run seed -w backend`.
+1. Create the Supabase project in a **specific** region, **Southeast Asia (Singapore)**, the same region as the API. The general "Asia-Pacific" option can place it elsewhere, and cross-region latency more than doubles response times (ADR-10).
+2. In Render, choose **New → Blueprint** and select this repository.
+3. Set `DATABASE_URL` to the Supabase **session pooler** connection string and `CORS_ORIGIN` to the frontend's URL.
+4. Deploy. On every start the service runs pending migrations, then starts the API; Render's health check calls `/health`, which also checks the database.
+5. Load the data once, from a local machine with `DATABASE_URL` pointing at the same database: `npm run seed -w backend`.
 
 The free instance sleeps after 15 minutes without traffic, so the first request after a pause can take up to a minute.
 
