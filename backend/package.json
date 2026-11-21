@@ -8,10 +8,11 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
+    "test:integration": "jest --config test/jest-integration.json --runInBand",
+    "typeorm": "typeorm-ts-node-commonjs -d src/database/cli-data-source.ts",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "seed": "ts-node src/database/seed/seed.ts"

@@ -56,6 +56,20 @@ npm run dev:backend                    # API on http://localhost:3000
 
 The seed refuses to run against a table that already has data. To replace existing data, run `npm run seed -w backend -- --reset`.
 
+### Integration tests
+
+Unit tests need no database. The integration tests run the real SQL (aggregates, filters, the import upsert, constraints) against PostgreSQL and need a **separate database whose name ends in `_test`**: they rebuild the schema and empty the table on every run, and refuse to run against any other database. CI provides one automatically. Locally, any PostgreSQL works:
+
+```bash
+# Any one of these, then set TEST_DATABASE_URL to it:
+#   Docker:            docker run -d -p 5433:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=salary_test postgres:16
+#   Local PostgreSQL:  createdb salary_test
+#   Hosted (Supabase): CREATE DATABASE salary_test;  and use your connection string with /salary_test
+export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/salary_test
+export TEST_DATABASE_SSL=false          # true for Supabase or other hosted Postgres
+npm run test:integration -w backend
+```
+
 ## Project status
 
 - [x] Requirements, architecture and decision records

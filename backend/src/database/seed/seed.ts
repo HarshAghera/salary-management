@@ -1,4 +1,4 @@
-import dataSource from '../data-source';
+import dataSource from '../cli-data-source';
 import { Employee } from '../../employees/employee.entity';
 import { generateEmployees } from './employee-generator';
 

@@ -1,10 +1,12 @@
-import 'dotenv/config';
 import 'reflect-metadata';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { AppConfig, loadConfig } from '../config/env';
+import { DataSourceOptions } from 'typeorm';
+import { AppConfig } from '../config/env';
 import { Employee } from '../employees/employee.entity';
 
-/** Shared by the Nest app and the TypeORM CLI so both see the same schema. `synchronize` stays off (migrations only). */
+/**
+ * Shared by the Nest app, the TypeORM CLI, the seed script and the integration tests
+ * so all of them see the same schema. `synchronize` stays off (migrations only).
+ */
 export function buildDataSourceOptions(config: AppConfig): DataSourceOptions {
   return {
     type: 'postgres',
@@ -15,5 +17,3 @@ export function buildDataSourceOptions(config: AppConfig): DataSourceOptions {
     synchronize: false,
   };
 }
-
-export default new DataSource(buildDataSourceOptions(loadConfig(process.env)));

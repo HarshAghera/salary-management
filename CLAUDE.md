@@ -36,6 +36,7 @@ Salary management web app for ACME's HR Manager (10,000 employees, multiple coun
 - Unit tests must be fast and deterministic: no network, no real database, no wall-clock dependence, fixed seeds for random data.
 - Mock repositories in service tests. One behaviour per test, named as a sentence: `it('rejects a negative salary')`.
 - Arrange–Act–Assert structure. Each test sets up its own data.
+- SQL behaviour (aggregates, filters, upserts, constraints) is covered by integration tests in `backend/test/*.int-spec.ts`, run against a `_test` PostgreSQL database. Add or update one whenever a query or migration changes.
 
 ## Commits
 - Conventional Commits: `feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`, with an optional scope, e.g. `feat(employees): add directory pagination`.

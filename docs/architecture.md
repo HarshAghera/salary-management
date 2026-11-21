@@ -44,7 +44,7 @@ salary-management/
 │   │   ├── health/         liveness + database check
 │   │   ├── common/         country/currency reference data, shared DTOs, pipes
 │   │   └── database/       TypeORM config, migrations, seed script
-│   └── test/
+│   └── test/               integration tests against a real Postgres
 ├── frontend/           React SPA
 │   └── src/
 │       ├── api/            typed API client
@@ -201,6 +201,8 @@ Touch targets are at least 44 × 44 px, and nothing depends on hover to be disco
 |---|---|---|
 | Unit (backend) | Services, validators, import row parser, currency mapping, query building | Jest, mocked repositories — no network, no database |
 | Unit (frontend) | Key components and hooks | Vitest + React Testing Library |
-| Integration (optional) | Repository queries against a real Postgres | Jest + local Postgres (Docker) |
+| Integration (backend) | The SQL itself: insight aggregates and median rounding, directory filters, search escaping and stable paging, the import upsert, and the database's unique and check constraints | Jest against a real PostgreSQL database whose name ends in `_test`; the schema is rebuilt from the migrations on every run. CI provides a throwaway Postgres 16 service |
 
 Tests are deterministic: no reliance on wall-clock time, random data uses fixed seeds, and each test arranges its own data.
+
+Unit tests (`npm test`) never touch a database, so they run anywhere in seconds. Integration tests (`npm run test:integration -w backend`) live in `backend/test/` and need `TEST_DATABASE_URL`; they refuse to run against a database whose name does not end in `_test`, because every test empties the employees table.
