@@ -61,6 +61,6 @@ The seed refuses to run against a table that already has data. To replace existi
 - [x] Requirements, architecture and decision records
 - [x] Backend: setup, data model, employee CRUD and directory
 - [x] Backend: filter options, seed data and salary insights
-- [ ] Backend: Excel import / export
+- [x] Backend: Excel import / export
 - [ ] Frontend
 - [ ] Deployment and video demo

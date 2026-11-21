@@ -17,15 +17,19 @@ export const SORT_COLUMNS: Record<SortField, string> = {
   hireDate: 'e.hireDate',
 };
 
-export interface DirectoryCriteria {
-  page: number;
-  pageSize: number;
+/** Which employees match and in what order; shared by the paged list and the Excel export. */
+export interface DirectorySearch {
   search?: string;
   country?: string;
   department?: string;
   jobTitle?: string;
   sortBy: SortField;
   sortOrder: SortOrder;
+}
+
+export interface DirectoryCriteria extends DirectorySearch {
+  page: number;
+  pageSize: number;
 }
 
 export interface EmployeePage {

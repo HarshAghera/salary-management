@@ -22,7 +22,7 @@ export class CreateEmployeeDto {
   fullName!: string;
 
   @Transform(trimLower)
-  @IsEmail()
+  @IsEmail({}, { message: 'email must be a valid email address' })
   @MaxLength(254)
   email!: string;
 
@@ -48,6 +48,6 @@ export class CreateEmployeeDto {
   salary!: number;
 
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'hireDate must be in YYYY-MM-DD format' })
-  @IsISO8601({ strict: true })
+  @IsISO8601({ strict: true }, { message: 'hireDate must be a real calendar date' })
   hireDate!: string;
 }

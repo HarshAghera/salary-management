@@ -117,3 +117,23 @@ Short records of significant decisions: the context, what was decided, and the t
 **Consequences:**
 - ➕ Every environment has identical data, so insights, screenshots and the demo are reproducible.
 - ➕ Salary bands make the insights meaningful rather than random noise.
+
+---
+
+## ADR-9: Excel export mirrors the import template
+**Status:** Accepted
+
+**Context:** HR's day-to-day work happens in spreadsheets. If an export cannot be imported back, every bulk change means retyping data into the template.
+
+**Decision:** Export uses the import template's columns plus a read-only `Currency` column. Import matches columns by header name, ignores unknown columns, and validates rows with the same DTO as the API. Files are read and written with `exceljs`.
+
+**Alternatives considered:**
+- *Fixed column positions* — simpler parsing, but a reordered or extra column would silently shift data into the wrong field.
+- *A separate import-only validator* — duplicates the API's rules, so the two would drift apart.
+- *SheetJS* — capable, but current releases are distributed outside the npm registry. `exceljs` is on npm, supports streaming writes and data validation (the country dropdown).
+
+**Consequences:**
+- ➕ Export → edit → import works with no reformatting; re-importing an unchanged export is idempotent.
+- ➕ One set of validation rules for the API and the import, with error messages that name the spreadsheet column.
+- ➖ Matching by header means renamed headers are reported as missing columns. Mitigated by the template and a clear error on row 1.
+- ➖ The created/updated split relies on Postgres's `xmax = 0` for freshly inserted rows, a widely used but implementation-level detail. If it changed, only the counts in the response would be affected, not the data.

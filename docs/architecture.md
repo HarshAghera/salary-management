@@ -137,21 +137,28 @@ sequenceDiagram
 
     HR->>UI: Choose .xlsx file
     UI->>API: POST /excel/import (multipart)
-    API->>API: Check type, size (≤ 1 MB) and row count (≤ 1,000)
-    API->>API: Parse rows, validate every row
+    API->>API: Check type (.xlsx) and size (≤ 1 MB, else 413)
+    API->>API: Match columns by header, check row count (≤ 1,000)
+    API->>API: Validate every row with the API's rules, reject duplicate emails
     alt any row invalid
         API-->>UI: 422 + row-level errors
         UI-->>HR: Error table (row, column, reason)
     else all rows valid
-        API->>DB: BEGIN
-        API->>DB: Upsert ON CONFLICT (lower(email))
-        API->>DB: COMMIT
+        API->>DB: One INSERT … ON CONFLICT (lower(email)) DO UPDATE
         API-->>UI: 200 { created, updated }
         UI-->>HR: Import summary
     end
 ```
 
-Validation runs over the whole file before any write, and the write happens in one transaction, so a file is either fully applied or not at all (ADR-7). All rows are written with a single multi-row upsert statement, so even a full 1,000-row file costs one database round trip. The 1,000-row limit keeps imports to a few seconds on a small instance; the initial 10,000 employees are loaded by the seed script, not by import.
+Validation runs over the whole file before any write, and all rows are then written by a single multi-row upsert. A single statement is atomic, so a file is either fully applied or not at all (ADR-7), and even a full 1,000-row file costs one database round trip. Created and updated rows are told apart in the same statement (`RETURNING (xmax = 0)`). The 1,000-row limit keeps imports to a few seconds on a small instance; the initial 10,000 employees are loaded by the seed script, not by import.
+
+**Import rules in detail**
+- Columns are matched by header name, ignoring letter case, spacing and order; unknown columns are ignored. Missing required columns are reported against row 1.
+- Every row is validated with the same rules as `POST /employees`. Emails are compared case-insensitively, and an email that appears twice in one file is an error, because it is ambiguous which row should win.
+- Excel cell types are normalised: hyperlinked emails, rich text and formula results are read as their values, date cells become `YYYY-MM-DD`, and salaries typed as text (`85,000.50`) are accepted.
+- Responses: `200 { created, updated }`; `422 { statusCode, message, errors: [{ row, column, message }] }` for invalid rows; `400` for a missing, non-.xlsx, unreadable, empty or over-limit file; `413` for files over 1 MB. Re-importing the same file is idempotent.
+
+**Template and export.** The template (`/excel/template`) has the import headers, a country-code dropdown and an Instructions sheet listing the rules and country codes. The export (`/excel/export`) accepts the directory's search, filters and sort (without paging) and uses the template's columns plus `Currency`, which import ignores, so HR can export, edit and import the same file back.
 
 ## Frontend design
 
@@ -183,8 +190,8 @@ Touch targets are at least 44 × 44 px, and nothing depends on hover to be disco
 | Filtering and sorting | Indexed columns; sort fields whitelisted to prevent arbitrary SQL |
 | Search | `ILIKE` on name and email. At 10,000 rows a scan is a few ms; a `pg_trgm` index is the next step if data grows ~10× |
 | Insights | Single `GROUP BY` queries in Postgres; median via `percentile_cont(0.5)` |
-| Import | Capped at 1,000 rows; validate in memory, then one multi-row upsert in a single transaction |
-| Export | Streamed workbook generation, so large exports don't buffer twice |
+| Import | Capped at 1,000 rows; validate in memory, then one multi-row upsert statement. Measured: a 1,000-row file imports in about 1.8 s end to end, including a 300 ms round trip from a laptop |
+| Export | Rows are written to the response as the workbook is generated, so the file is never assembled in memory first. Measured: all 10,000 employees export in about 3 s |
 | Seeding | One transaction of 1,000-row batched inserts; 10,000 rows in about 12 s even over a 300 ms round trip from a laptop |
 | Measured query time | At 10,000 employees, Postgres executes the country summary in ~14 ms, a job-title breakdown in ~2 ms, a filtered directory page in under 1 ms and a name/email search in ~23 ms. End-to-end latency is dominated by the network round trip between API and database. |
 
