@@ -10,8 +10,9 @@ const dateFormat = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium', timeZo
  * "₹ 2,450,000" for whole amounts, "$ 85,000.50" when there are cents. The sign is set
  * apart from the digits by a non-breaking space, so the two never wrap onto separate lines.
  */
-export function formatMoney(amount: number, currency: string): string {
-  const whole = Number.isInteger(amount);
+export function formatMoney(amount: number, currency: string, { wholeUnits = false } = {}): string {
+  // Summary figures (averages, medians) read better without cents; individual salaries keep them.
+  const whole = wholeUnits || Number.isInteger(amount);
   const parts = new Intl.NumberFormat(LOCALE, {
     style: 'currency',
     currency,

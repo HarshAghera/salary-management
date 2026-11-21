@@ -17,6 +17,10 @@ describe('formatMoney', () => {
     expect(formatMoney(48500, 'GBP')).toBe(`£${NBSP}48,500`);
   });
 
+  it('rounds to whole units when asked, for summary figures such as averages', () => {
+    expect(formatMoney(85123.67, 'USD', { wholeUnits: true })).toBe(`$${NBSP}85,124`);
+  });
+
   it('keeps the country prefix of currencies that share the dollar sign', () => {
     expect(formatMoney(117200, 'AUD')).toBe(`A$${NBSP}117,200`);
   });

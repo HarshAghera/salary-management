@@ -1,6 +1,7 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import type { DirectoryFilters, DirectoryParams, Employee, EmployeeInput } from '../../api/types';
+import { insightKeys } from '../insights/queries';
 
 /** Every key starts with "employees", so one invalidation refreshes lists, feeds and filter options. */
 export const employeeKeys = {
@@ -40,20 +41,30 @@ export function useFilterOptions() {
   });
 }
 
+/** After any change to employees, the directory and the salary insights are both out of date. */
+function useRefreshAfterChange() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
+      queryClient.invalidateQueries({ queryKey: insightKeys.all }),
+    ]);
+}
+
 /** Creates an employee, or updates one when an id is given. */
 export function useSaveEmployee() {
-  const queryClient = useQueryClient();
+  const refresh = useRefreshAfterChange();
   return useMutation({
     mutationFn: ({ id, input }: { id?: string; input: EmployeeInput }): Promise<Employee> =>
       id ? api.employees.update(id, input) : api.employees.create(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
+    onSuccess: refresh,
   });
 }
 
 export function useDeleteEmployee() {
-  const queryClient = useQueryClient();
+  const refresh = useRefreshAfterChange();
   return useMutation({
     mutationFn: (id: string) => api.employees.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: employeeKeys.all }),
+    onSuccess: refresh,
   });
 }
