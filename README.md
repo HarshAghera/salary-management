@@ -71,6 +71,17 @@ export TEST_DATABASE_SSL=false          # true for Supabase or other hosted Post
 npm run test:integration -w backend
 ```
 
+## Deployment
+
+The API is deployed to Render from [`render.yaml`](render.yaml) (see ADR-10):
+
+1. In Render, choose **New → Blueprint** and select this repository.
+2. Set `DATABASE_URL` to the Supabase **session pooler** connection string and `CORS_ORIGIN` to the frontend's URL.
+3. Deploy. On every start the service runs pending migrations, then starts the API; Render's health check calls `/health`, which also checks the database.
+4. Load the data once, from a local machine with `DATABASE_URL` pointing at the same database: `npm run seed -w backend`.
+
+The free instance sleeps after 15 minutes without traffic, so the first request after a pause can take up to a minute.
+
 ## Project status
 
 - [x] Requirements, architecture and decision records

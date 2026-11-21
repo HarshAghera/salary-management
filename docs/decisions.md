@@ -137,3 +137,22 @@ Short records of significant decisions: the context, what was decided, and the t
 - ➕ One set of validation rules for the API and the import, with error messages that name the spreadsheet column.
 - ➖ Matching by header means renamed headers are reported as missing columns. Mitigated by the template and a clear error on row 1.
 - ➖ The created/updated split relies on Postgres's `xmax = 0` for freshly inserted rows, a widely used but implementation-level detail. If it changed, only the counts in the response would be affected, not the data.
+
+---
+
+## ADR-10: Deploy the API as a Render Blueprint, migrating on start
+**Status:** Accepted
+
+**Context:** The API runs on Render's free plan, which has no pre-deploy step for running migrations and puts the instance to sleep after 15 minutes without traffic. The database is on Supabase in Sydney.
+
+**Decision:** The service is described in `render.yaml` (infrastructure as code) in the Singapore region, the closest Render region to the database. The start command runs pending migrations from the compiled build, then starts the API. `/health` checks database connectivity and is Render's health check, so a deploy that cannot reach the database is never put into service.
+
+**Alternatives considered:**
+- *Run migrations automatically inside the app (`migrationsRun`)* — hides schema changes in application startup; an explicit command is easier to see and to run by hand.
+- *Run migrations manually before each deploy* — easy to forget, and the API could start against an outdated schema.
+
+**Consequences:**
+- ➕ The deployment is reproducible from the repository; secrets stay in Render's dashboard.
+- ➕ A deploy always runs against the current schema, and a broken database connection fails the health check instead of serving errors.
+- ➖ Migrations run on every start. They are idempotent, so this costs one quick query when there is nothing to apply. It would need revisiting with several instances, which the free plan does not use.
+- ➖ The first request after a period of inactivity waits for the instance to wake up (typically under a minute). Acceptable for an internal tool and its demo; a paid instance removes it.
