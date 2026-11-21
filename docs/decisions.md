@@ -157,3 +157,25 @@ Short records of significant decisions: the context, what was decided, and the t
 - ➕ Co-location was measured, not assumed. With the database in Sydney, a trivial `/health` request took a median of 312 ms and the slowest endpoint 369 ms, almost all of it network between the two regions. After moving the database to Singapore (a new project, rebuilt with the scripted migration and the deterministic seed in seconds), the same requests took 126–185 ms end to end from a client in India.
 - ➖ Migrations run on every start. They are idempotent, so this costs one quick query when there is nothing to apply. It would need revisiting with several instances, which the free plan does not use.
 - ➖ The first request after a period of inactivity waits for the instance to wake up (typically under a minute). Acceptable for an internal tool and its demo; a paid instance removes it.
+
+---
+
+## ADR-11: A calm, data-first visual design with light and dark modes
+**Status:** Accepted
+
+**Context:** HR spends long sessions reading tables and figures. MUI's defaults (heavy shadows, saturated blue bars, Roboto) look dated and compete with the data.
+
+**Decision:** A "Teal & mint" palette. The brand colour, teal `#0F766E`, is identical in both modes: it fills the top bar and the logo mark, so light and dark read as one product. Light mode has white cards on a mint-tinted canvas (`#F2F8F7`). Dark mode tints the canvas (`#11211F`) and cards (`#183330`) with the same teal, so a mostly empty screen reads as one colour family rather than a large near-black area. Text is a tinted ink (`#10231F` / `#E8F5F2`), never pure black on white. Teal is also the primary accent for buttons and links; in dark mode it is lifted to `#2DD4BF`, the same hue, so it stays legible on dark cards. There is one secondary accent (periwinkle). Status colours are reserved for meaning: green for success, amber for warning, red for error, sky for info, used the same way in badges, import results and charts. Success is a leaf green (`#15803D`), kept clearly apart from the blue-green brand so a success message never looks like an ordinary button. The brand colour fills a solid top bar: on desktop it holds the section tabs, with the active one underlined; on phones and tablets it holds a menu button that opens a drawer. Cards have 12–16 px radii, a soft primary-tinted shadow in light mode and a hairline border in dark mode. Type is Poppins (weights 400–700), bundled with the app rather than loaded from a font CDN. The colour scheme follows the device setting, can be switched in the app, and is applied by an inline script before the app loads, so dark mode never flashes white.
+
+**Alternatives considered:**
+- *Periwinkle brand with an untinted slate dark mode* — modern, but dark mode reads as a large near-black area.
+- *Emerald brand* — fresh, but the same family as the success green, so success badges blend in with buttons.
+- *Deep forest green* — calm, but less lively for an everyday tool.
+
+**Consequences:**
+- ➕ Data stays the most prominent element; colour carries meaning instead of decoration.
+- ➕ Both schemes come from one theme definition, so every component and later screen inherits them.
+- ➕ Navigation across the top leaves the full page width for the employee table.
+- ➖ Every new colour must fit the palette rules; status colours must not be reused as decoration.
+- ➖ White text on the top bar limits how light the brand can be: `#0F766E` gives 5.5:1 contrast, so paler teals are not used for the bar.
+- ➖ The bundled font adds about 31 KB on first load (four weights of the Latin subset; other scripts load only if a page uses them), in exchange for consistent typography and no third-party request.

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Manage ACME's employee salaries and see how the organization pays people." />
+    <title>ACME Salary Management</title>
+    <style>
+      /* Paint the right background before the app loads, so dark mode never flashes white. */
+      html.light { background: #f2f8f7; color-scheme: light; }
+      html.dark { background: #11211f; color-scheme: dark; }
+    </style>
+    <script>
+      // Apply the saved or system colour scheme before React mounts (MUI stores the choice in "mui-mode").
+      (function () {
+        try {
+          var mode = localStorage.getItem('mui-mode') || 'system';
+          var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.add(dark ? 'dark' : 'light');
+        } catch (e) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

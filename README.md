@@ -19,7 +19,7 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 
 | Layer | Technology |
 |---|---|
-| Frontend | React (Vite), MUI, TanStack Query |
+| Frontend | React (Vite), MUI, TanStack Query, React Router |
 | Backend | NestJS, TypeORM |
 | Database | PostgreSQL (Supabase) |
 | Testing | Jest, Vitest, React Testing Library |
@@ -37,13 +37,13 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 
 ## Getting started
 
-This is an npm-workspaces monorepo: `backend/` (NestJS API) and `docs/`. Requires Node 20+ (see `.nvmrc`) and a PostgreSQL 13+ database (local Docker or Supabase).
+This is an npm-workspaces monorepo: `backend/` (NestJS API), `frontend/` (React SPA) and `docs/`. Requires Node 20+ (see `.nvmrc`) and a PostgreSQL 13+ database (local Docker or Supabase).
 
 ```bash
-npm install                 # once, from the repo root
-npm run typecheck
+npm install                 # once, from the repo root: installs both workspaces
+npm run typecheck           # backend + frontend
 npm run lint                # ESLint with type-aware rules
-npm test                    # Jest, no database needed
+npm test                    # Jest (backend) + Vitest (frontend), no database needed
 ```
 
 ### Backend
@@ -56,6 +56,13 @@ npm run dev:backend                    # API on http://localhost:3000
 ```
 
 The seed refuses to run against a table that already has data. To replace existing data, run `npm run seed -w backend -- --reset`.
+
+### Frontend
+
+```bash
+cp frontend/.env.example frontend/.env   # VITE_API_URL points at the API (local or deployed)
+npm run dev:frontend                     # http://localhost:5173
+```
 
 ### Integration tests
 
