@@ -11,7 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { EmployeePage } from './directory-query';
+import { EmployeePage, FilterOptions } from './directory-query';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -30,6 +30,12 @@ export class EmployeesController {
   @Get()
   list(@Query() query: ListEmployeesQueryDto): Promise<EmployeePage> {
     return this.service.list(query);
+  }
+
+  // Must be declared before ':id', otherwise "filter-options" is parsed as an id and rejected.
+  @Get('filter-options')
+  filterOptions(): Promise<FilterOptions> {
+    return this.service.filterOptions();
   }
 
   @Get(':id')

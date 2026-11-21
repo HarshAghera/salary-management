@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { COUNTRIES } from '../common/countries';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { Employee } from './employee.entity';
@@ -6,7 +7,8 @@ import { EmployeesRepository } from './employees.repository';
 import { EmployeesService } from './employees.service';
 
 type RepoMock = jest.Mocked<
-  Pick<EmployeesRepository, 'findById' | 'findByEmail' | 'save' | 'deleteById' | 'findPage'>
+  Pick<EmployeesRepository, 'findById' | 'findByEmail' | 'save' | 'deleteById' | 'findPage' | 'findDistinctValues'
+  >
 >;
 
 const newEmployeeDto = (overrides: Partial<CreateEmployeeDto> = {}): CreateEmployeeDto => ({
@@ -42,6 +44,7 @@ function setup() {
     save: jest.fn(async (e) => e as Employee),
     deleteById: jest.fn(),
     findPage: jest.fn(),
+    findDistinctValues: jest.fn(),
   };
   const service = new EmployeesService(repo as unknown as EmployeesRepository);
   return { repo, service };
@@ -192,6 +195,23 @@ describe('EmployeesService', () => {
       await service.list(criteria);
 
       expect(repo.findPage).toHaveBeenCalledWith(criteria);
+    });
+  });
+
+  describe('filterOptions', () => {
+    it('returns every reference country with the departments and job titles in use', async () => {
+      const { repo, service } = setup();
+      repo.findDistinctValues.mockResolvedValue({
+        departments: ['Engineering', 'Finance'],
+        jobTitles: ['Accountant', 'Software Engineer'],
+      });
+
+      const options = await service.filterOptions();
+
+      expect(options.countries).toHaveLength(COUNTRIES.length);
+      expect(options.countries).toContainEqual({ code: 'IN', name: 'India', currency: 'INR' });
+      expect(options.departments).toEqual(['Engineering', 'Finance']);
+      expect(options.jobTitles).toEqual(['Accountant', 'Software Engineer']);
     });
   });
 });

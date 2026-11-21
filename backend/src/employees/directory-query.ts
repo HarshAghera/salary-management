@@ -1,3 +1,4 @@
+import { Country } from '../common/countries';
 import { Employee } from './employee.entity';
 
 export const SORT_FIELDS = ['fullName', 'salary', 'hireDate'] as const;
@@ -32,6 +33,12 @@ export interface EmployeePage {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface FilterOptions {
+  countries: Country[];
+  departments: string[];
+  jobTitles: string[];
 }
 
 /** Escapes LIKE wildcards so a search for "50%" matches that text, not everything. */

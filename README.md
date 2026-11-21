@@ -50,14 +50,17 @@ npm test                    # Jest, no database needed
 ```bash
 cp backend/.env.example backend/.env   # then set DATABASE_URL
 npm run migration:run -w backend       # create the schema
+npm run seed -w backend                # load 10,000 employees (same data every run)
 npm run dev:backend                    # API on http://localhost:3000
 ```
+
+The seed refuses to run against a table that already has data. To replace existing data, run `npm run seed -w backend -- --reset`.
 
 ## Project status
 
 - [x] Requirements, architecture and decision records
 - [x] Backend: setup, data model, employee CRUD and directory
-- [ ] Backend: filter options, seed data and salary insights
+- [x] Backend: filter options, seed data and salary insights
 - [ ] Backend: Excel import / export
 - [ ] Frontend
 - [ ] Deployment and video demo

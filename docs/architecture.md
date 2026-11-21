@@ -112,6 +112,18 @@ erDiagram
 
 `GET /employees` returns `{ items, total, page, pageSize }`. `pageSize` defaults to 25 (maximum 100), sorting defaults to `fullName` ascending, and `sortBy` accepts only `fullName`, `salary` or `hireDate`. Search matches name or email case-insensitively; `%` and `_` in the search text match literally.
 
+`GET /employees/filter-options` returns `{ countries, departments, jobTitles }`. Countries are the full reference list (`code`, `name`, `currency`), because the create form needs every country, not only those already in use; departments and job titles are the distinct values currently in the data.
+
+Insight responses carry the currency with every figure, and salary figures are never combined across countries:
+
+| Endpoint | Response |
+|---|---|
+| `GET /insights/overview` | `{ totalHeadcount, byCountry: [{ countryCode, countryName, currency, headcount }], byDepartment: [{ department, headcount }] }`, largest first |
+| `GET /insights/countries` | `[{ countryCode, countryName, currency, headcount, minSalary, maxSalary, averageSalary, medianSalary }]` |
+| `GET /insights/countries/:code/job-titles` | `{ countryCode, countryName, currency, jobTitles: [{ jobTitle, headcount, minSalary, maxSalary, averageSalary }] }`, highest average first; unknown country codes return `400` |
+
+Averages and medians are rounded to cents in SQL. `percentile_cont` computes in double precision, which is exact for the two-decimal amounts in range here; the result is cast back to `numeric` before rounding.
+
 Errors follow one shape: `{ statusCode, message, errors? }`. Import validation failures return `422` with row-level `errors: [{ row, column, message }]`.
 
 ### Excel import flow
@@ -173,7 +185,8 @@ Touch targets are at least 44 × 44 px, and nothing depends on hover to be disco
 | Insights | Single `GROUP BY` queries in Postgres; median via `percentile_cont(0.5)` |
 | Import | Capped at 1,000 rows; validate in memory, then one multi-row upsert in a single transaction |
 | Export | Streamed workbook generation, so large exports don't buffer twice |
-| Seeding | Batched inserts; 10,000 rows in seconds |
+| Seeding | One transaction of 1,000-row batched inserts; 10,000 rows in about 12 s even over a 300 ms round trip from a laptop |
+| Measured query time | At 10,000 employees, Postgres executes the country summary in ~14 ms, a job-title breakdown in ~2 ms, a filtered directory page in under 1 ms and a name/email search in ~23 ms. End-to-end latency is dominated by the network round trip between API and database. |
 
 ## Testing strategy
 

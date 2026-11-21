@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { currencyForCountry } from '../common/countries';
-import { EmployeePage } from './directory-query';
+import { COUNTRIES, currencyForCountry } from '../common/countries';
+import { EmployeePage, FilterOptions } from './directory-query';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -24,6 +24,15 @@ export class EmployeesService {
   async list(query: ListEmployeesQueryDto): Promise<EmployeePage> {
     const [items, total] = await this.employees.findPage(query);
     return { items, total, page: query.page, pageSize: query.pageSize };
+  }
+
+  /**
+   * Countries come from the reference list (the create form needs all of them, not
+   * only those already in use); departments and job titles come from the data.
+   */
+  async filterOptions(): Promise<FilterOptions> {
+    const { departments, jobTitles } = await this.employees.findDistinctValues();
+    return { countries: [...COUNTRIES], departments, jobTitles };
   }
 
   async findOne(id: string): Promise<Employee> {

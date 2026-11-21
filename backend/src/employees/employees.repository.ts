@@ -52,6 +52,21 @@ export class EmployeesRepository {
     );
   }
 
+  /** Distinct values in use, sorted, for the directory filter dropdowns. */
+  async findDistinctValues(): Promise<{ departments: string[]; jobTitles: string[] }> {
+    const distinct = (column: 'department' | 'job_title') =>
+      this.repo
+        .createQueryBuilder('e')
+        .select(`e.${column}`, 'value')
+        .distinct(true)
+        .orderBy(`e.${column}`, 'ASC')
+        .getRawMany<{ value: string }>()
+        .then((rows) => rows.map((row) => row.value));
+
+    const [departments, jobTitles] = await Promise.all([distinct('department'), distinct('job_title')]);
+    return { departments, jobTitles };
+  }
+
   save(employee: Partial<Employee>): Promise<Employee> {
     return this.repo.save(this.repo.create(employee));
   }
