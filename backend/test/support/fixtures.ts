@@ -27,7 +27,6 @@ export function newEmployee(overrides: Partial<Omit<NewEmployee, 'currency'>> = 
 
 /** The same employee as a client would send it: no currency, which the server derives. */
 export function newEmployeeInput(overrides: Partial<CreateEmployeeDto> = {}): CreateEmployeeDto {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { currency, ...input } = newEmployee(overrides);
   return input;
 }

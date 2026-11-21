@@ -42,6 +42,7 @@ This is an npm-workspaces monorepo: `backend/` (NestJS API) and `docs/`. Require
 ```bash
 npm install                 # once, from the repo root
 npm run typecheck
+npm run lint                # ESLint with type-aware rules
 npm test                    # Jest, no database needed
 ```
 

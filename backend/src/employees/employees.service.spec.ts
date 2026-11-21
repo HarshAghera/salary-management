@@ -41,7 +41,7 @@ function setup() {
   const repo: RepoMock = {
     findById: jest.fn(),
     findByEmail: jest.fn(),
-    save: jest.fn(async (e) => e as Employee),
+    save: jest.fn((e) => Promise.resolve(e as Employee)),
     deleteById: jest.fn(),
     findPage: jest.fn(),
     findDistinctValues: jest.fn(),
