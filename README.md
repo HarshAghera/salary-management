@@ -35,6 +35,23 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 | [AI workflow](docs/ai-workflow.md) | How AI tools were used and verified, with the [prompt log](docs/prompts/) |
 | [Agent instructions](CLAUDE.md) | Standing conventions given to the AI coding agent |
 
+## Getting started
+
+This is an npm-workspaces monorepo: `backend/` (NestJS API) and `docs/`. Requires Node 20+ (see `.nvmrc`) and a PostgreSQL 13+ database (local Docker or Supabase).
+
+```bash
+npm install                 # once, from the repo root
+npm run typecheck
+npm test                    # Jest, no database needed
+```
+
+### Backend
+
+```bash
+cp backend/.env.example backend/.env   # then set DATABASE_URL
+npm run dev:backend                    # API on http://localhost:3000
+```
+
 ## Project status
 
 - [x] Requirements and architecture
