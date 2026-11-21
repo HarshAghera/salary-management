@@ -110,6 +110,8 @@ erDiagram
 | `GET` | `/excel/export` | Directory export (.xlsx), same filters as `/employees` |
 | `GET` | `/health` | Liveness and database connectivity |
 
+`GET /employees` returns `{ items, total, page, pageSize }`. `pageSize` defaults to 25 (maximum 100), sorting defaults to `fullName` ascending, and `sortBy` accepts only `fullName`, `salary` or `hireDate`. Search matches name or email case-insensitively; `%` and `_` in the search text match literally.
+
 Errors follow one shape: `{ statusCode, message, errors? }`. Import validation failures return `422` with row-level `errors: [{ row, column, message }]`.
 
 ### Excel import flow

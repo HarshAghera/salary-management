@@ -9,8 +9,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
+import { EmployeePage } from './directory-query';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './employee.entity';
 import { EmployeesService } from './employees.service';
@@ -22,6 +25,11 @@ export class EmployeesController {
   @Post()
   create(@Body() dto: CreateEmployeeDto): Promise<Employee> {
     return this.service.create(dto);
+  }
+
+  @Get()
+  list(@Query() query: ListEmployeesQueryDto): Promise<EmployeePage> {
+    return this.service.list(query);
   }
 
   @Get(':id')

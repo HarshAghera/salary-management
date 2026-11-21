@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { currencyForCountry } from '../common/countries';
+import { EmployeePage } from './directory-query';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Employee } from './employee.entity';
 import { EmployeesRepository } from './employees.repository';
@@ -17,6 +19,11 @@ export class EmployeesService {
       ...dto,
       currency: currencyForCountry(dto.countryCode),
     });
+  }
+
+  async list(query: ListEmployeesQueryDto): Promise<EmployeePage> {
+    const [items, total] = await this.employees.findPage(query);
+    return { items, total, page: query.page, pageSize: query.pageSize };
   }
 
   async findOne(id: string): Promise<Employee> {

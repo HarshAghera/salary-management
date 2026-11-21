@@ -1,11 +1,12 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { ListEmployeesQueryDto } from './dto/list-employees-query.dto';
 import { Employee } from './employee.entity';
 import { EmployeesRepository } from './employees.repository';
 import { EmployeesService } from './employees.service';
 
 type RepoMock = jest.Mocked<
-  Pick<EmployeesRepository, 'findById' | 'findByEmail' | 'save' | 'deleteById'>
+  Pick<EmployeesRepository, 'findById' | 'findByEmail' | 'save' | 'deleteById' | 'findPage'>
 >;
 
 const newEmployeeDto = (overrides: Partial<CreateEmployeeDto> = {}): CreateEmployeeDto => ({
@@ -40,6 +41,7 @@ function setup() {
     findByEmail: jest.fn(),
     save: jest.fn(async (e) => e as Employee),
     deleteById: jest.fn(),
+    findPage: jest.fn(),
   };
   const service = new EmployeesService(repo as unknown as EmployeesRepository);
   return { repo, service };
@@ -158,6 +160,38 @@ describe('EmployeesService', () => {
       repo.deleteById.mockResolvedValue(false);
 
       await expect(service.remove('missing')).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('list', () => {
+    const query = (overrides: Partial<ListEmployeesQueryDto> = {}): ListEmployeesQueryDto =>
+      Object.assign(new ListEmployeesQueryDto(), overrides);
+
+    it('returns the page of employees with the total and paging metadata', async () => {
+      const { repo, service } = setup();
+      const employees = [storedEmployee()];
+      repo.findPage.mockResolvedValue([employees, 42]);
+
+      const result = await service.list(query({ page: 2, pageSize: 10 }));
+
+      expect(result).toEqual({ items: employees, total: 42, page: 2, pageSize: 10 });
+    });
+
+    it('passes the search, filters and sorting to the repository', async () => {
+      const { repo, service } = setup();
+      repo.findPage.mockResolvedValue([[], 0]);
+      const criteria = query({
+        search: 'asha',
+        country: 'IN',
+        department: 'Engineering',
+        jobTitle: 'Software Engineer',
+        sortBy: 'salary',
+        sortOrder: 'desc',
+      });
+
+      await service.list(criteria);
+
+      expect(repo.findPage).toHaveBeenCalledWith(criteria);
     });
   });
 });

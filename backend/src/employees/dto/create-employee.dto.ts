@@ -12,12 +12,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { COUNTRY_CODES } from '../../common/countries';
-
-const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
-const trimLower = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim().toLowerCase() : value;
-const trimUpper = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value.trim().toUpperCase() : value;
+import { trim, trimLower, trimUpper } from '../../common/transforms';
 
 export class CreateEmployeeDto {
   @Transform(trim)

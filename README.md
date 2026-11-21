@@ -55,10 +55,9 @@ npm run dev:backend                    # API on http://localhost:3000
 
 ## Project status
 
-- [x] Requirements and architecture
-- [ ] Backend: employees CRUD and directory
-- [ ] Seed script (10,000 employees)
-- [ ] Salary insights
-- [ ] Excel import / export
+- [x] Requirements, architecture and decision records
+- [x] Backend: setup, data model, employee CRUD and directory
+- [ ] Backend: filter options, seed data and salary insights
+- [ ] Backend: Excel import / export
 - [ ] Frontend
 - [ ] Deployment and video demo
