@@ -179,3 +179,19 @@ Short records of significant decisions: the context, what was decided, and the t
 - ➖ Every new colour must fit the palette rules; status colours must not be reused as decoration.
 - ➖ White text on the top bar limits how light the brand can be: `#0F766E` gives 5.5:1 contrast, so paler teals are not used for the bar.
 - ➖ The bundled font adds about 31 KB on first load (four weights of the Latin subset; other scripts load only if a page uses them), in exchange for consistent typography and no third-party request.
+
+---
+
+## ADR-12: Keep the directory's search, filters, sort and page in the URL
+**Status:** Accepted
+
+**Context:** HR narrows the directory to answer a question ("engineers in India, highest paid first"), then opens an employee, refreshes, or sends the view to a colleague. State held only in React would be lost on refresh and could not be shared.
+
+**Decision:** The address bar is the single source of truth for the directory: `/employees?country=IN&jobTitle=Software%20Engineer&sortBy=salary&sortOrder=desc`. Defaults are left out, so a plain `/employees` stays clean. Values that are missing or edited by hand into nonsense fall back to the defaults rather than failing. Each page, filter or sort change adds a browser history entry, so Back and Forward step through the views HR has looked at; typing in search replaces the current entry instead of adding one. Every change except paging returns to page 1. Search is sent 300 ms after typing stops.
+
+**Consequences:**
+- ➕ Any view can be bookmarked or shared, and survives a refresh.
+- ➕ The same state drives the data grid, the phone card list and (next) the Excel export, so an export always matches what is on screen.
+- ➕ Reading and writing the URL are pure functions, unit tested without rendering anything.
+- ➕ Back and Forward behave as people expect in a browser: from page 3 Back returns to page 2, and after picking a filter Back removes it.
+- ➖ Search changes are not individual Back steps. A deliberate choice: one entry per pause in typing would make Back tedious. Back skips past a search to the view before it.

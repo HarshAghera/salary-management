@@ -174,8 +174,8 @@ The UI is built mobile-first with MUI breakpoints, and verified at three referen
 | Area | Phone (`xs`) | Tablet (`sm`–`md`) | Desktop (`lg`+) |
 |---|---|---|---|
 | Navigation | Top bar with a slide-out drawer | Top bar with a slide-out drawer | Top bar with section tabs |
-| Employee directory | Card list (name, title, country, salary) with infinite paging | Data grid with essential columns only | Full data grid |
-| Filters | Collapsible filter panel | Inline filter row | Inline filter row |
+| Employee directory | Card list (name, title, country, salary); further pages appended with a "Show more" button | Data grid with essential columns only | Full data grid |
+| Filters | Collapsible filter panel, with a sort menu in place of column headers | Inline filter row | Inline filter row |
 | Employee form | Single column, full-screen dialog | Two columns | Two columns in a dialog |
 | Insights | Stacked summary cards; tables scroll horizontally | Two-column grid | Multi-column grid |
 | Import errors | Scrollable error list | Table | Table |

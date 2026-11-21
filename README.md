@@ -96,5 +96,6 @@ The free instance sleeps after 15 minutes without traffic, so the first request 
 - [x] Backend: setup, data model, employee CRUD and directory
 - [x] Backend: filter options, seed data and salary insights
 - [x] Backend: Excel import / export
-- [ ] Frontend
+- [x] Frontend: design system, app shell and employee directory with add, edit and delete
+- [ ] Frontend: salary insights and Excel import / export
 - [ ] Deployment and video demo
