@@ -49,6 +49,7 @@ npm test                    # Jest, no database needed
 
 ```bash
 cp backend/.env.example backend/.env   # then set DATABASE_URL
+npm run migration:run -w backend       # create the schema
 npm run dev:backend                    # API on http://localhost:3000
 ```
 
