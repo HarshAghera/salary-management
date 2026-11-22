@@ -90,6 +90,13 @@ The API is deployed to Render from [`render.yaml`](render.yaml) (see ADR-10):
 
 The free instance sleeps after 15 minutes without traffic, so the first request after a pause can take up to a minute.
 
+The frontend is deployed to Vercel from [`frontend/vercel.json`](frontend/vercel.json), which sends every path to the single-page app so deep links such as `/insights?country=JP` survive a refresh:
+
+1. In Vercel, choose **Add New → Project** and import this repository.
+2. Set **Root Directory** to `frontend` (Vercel installs the npm workspaces from the repository root).
+3. Add the environment variable `VITE_API_URL` with the API's URL, without a trailing slash.
+4. Deploy, then set `CORS_ORIGIN` on Render to the Vercel URL, again without a trailing slash, so the browser may call the API.
+
 ## Project status
 
 - [x] Requirements, architecture and decision records
