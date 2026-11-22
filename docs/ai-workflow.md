@@ -47,6 +47,13 @@ Recorded as they happen, so the review shows judgment rather than just generatio
 | Error messages | Library defaults such as "must be a valid ISO 8601 date string" | Rewritten in HR's terms and mapped to spreadsheet column names, found during manual verification of the import. |
 | Database region | Deploy the API in Render's Singapore region as the "closest" to a Sydney database | Measured instead of assumed: ~260 ms of every request was cross-region network. The database was moved to Singapore, cutting responses from 298–369 ms to 126–185 ms. |
 | Integration test database | Run the integration tests in a local Docker container | No Docker dependency: the suite accepts any PostgreSQL database named `*_test`. CI provides its own, and locally a separate `salary_test` database in the existing Supabase project was used. |
+| Visual design | A "Clean SaaS" indigo theme with an untinted slate dark mode | Replaced after comparing palettes side by side: a teal brand used identically in both modes, teal-tinted dark surfaces and Poppins type, following an HRMS reference design (ADR-11). |
+| Browser history | Directory changes replaced the history entry, so Back skipped every filter and page change | Paging, filters and sort are now history steps; only typing in search replaces the current entry (ADR-12). |
+| Directory paging | The grid's next page snapped back to page 1 | Found in review. The sort model was rebuilt on every render and the grid treated it as a new sort. Models are memoised, and a regression test waits for the grid's delayed adjustment that the first tests missed. |
+| Date input | The browser's native date field | Its calendar cannot follow the theme or dark mode. Replaced by MUI's themed date picker, loaded only when the form opens. |
+| Import messages | An empty cell reported the first failing rule, e.g. "must be shorter than 120 characters" | Found by end-to-end testing. Empty cells now read "<Column> is required", with a test for every column. |
+| Test environment | Run browser tests against the local dev server already running | Data-changing tests run only against a throwaway local PostgreSQL, with the deployed API blocked at the network level, so test data cannot reach production. |
+
 ## Prompt log
 
 Key prompts are kept in [`prompts/`](prompts/), one file per phase. Each entry records the intent, the prompt, the outcome, and the human decision that set the direction.
@@ -55,3 +62,4 @@ Key prompts are kept in [`prompts/`](prompts/), one file per phase. Each entry r
 |---|---|
 | 01 — Planning and requirements | [prompts/01-planning.md](prompts/01-planning.md) |
 | 02 — Backend | [prompts/02-backend.md](prompts/02-backend.md) |
+| 03 — Frontend | [prompts/03-frontend.md](prompts/03-frontend.md) |
