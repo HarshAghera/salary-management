@@ -2,11 +2,11 @@
 
 A web application that lets ACME's HR Manager manage salary data for 10,000 employees across multiple countries, and answer questions about how the organization pays people, without spreadsheets.
 
-| | |
-|---|---|
-| **Live app** | [salary-management-pink.vercel.app](https://salary-management-pink.vercel.app) |
-| **API** | [salary-management-api-fw2q.onrender.com](https://salary-management-api-fw2q.onrender.com/health) (free instance: the first request after a pause can take up to a minute) |
-| **Video demo** | _coming soon_ |
+|                |                                                                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Live app**   | [salary-management-pink.vercel.app](https://salary-management-pink.vercel.app)                                                                                             |
+| **API**        | [salary-management-api-fw2q.onrender.com](https://salary-management-api-fw2q.onrender.com/health) (free instance: the first request after a pause can take up to a minute) |
+| **Video demo** | [Watch Here](https://www.youtube.com/watch?v=hVcHOlwjDmA) (3 min)                                                                                                          |
 
 ## Features
 
@@ -17,23 +17,23 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
+| Layer    | Technology                                      |
+| -------- | ----------------------------------------------- |
 | Frontend | React (Vite), MUI, TanStack Query, React Router |
-| Backend | NestJS, TypeORM |
-| Database | PostgreSQL (Supabase) |
-| Testing | Jest, Vitest, React Testing Library |
-| Hosting | Vercel (frontend), Render (backend) |
+| Backend  | NestJS, TypeORM                                 |
+| Database | PostgreSQL (Supabase)                           |
+| Testing  | Jest, Vitest, React Testing Library             |
+| Hosting  | Vercel (frontend), Render (backend)             |
 
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [Requirements](docs/requirements.md) | Goal, scope, deliberate exclusions and reasoning |
-| [Architecture](docs/architecture.md) | System and data model diagrams, API, performance and testing strategy |
-| [Decision records](docs/decisions.md) | Key decisions, alternatives considered and trade-offs |
-| [AI workflow](docs/ai-workflow.md) | How AI tools were used and verified, with the [prompt log](docs/prompts/) |
-| [Agent instructions](CLAUDE.md) | Standing conventions given to the AI coding agent |
+| Document                              | Contents                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| [Requirements](docs/requirements.md)  | Goal, scope, deliberate exclusions and reasoning                          |
+| [Architecture](docs/architecture.md)  | System and data model diagrams, API, performance and testing strategy     |
+| [Decision records](docs/decisions.md) | Key decisions, alternatives considered and trade-offs                     |
+| [AI workflow](docs/ai-workflow.md)    | How AI tools were used and verified, with the [prompt log](docs/prompts/) |
+| [Agent instructions](CLAUDE.md)       | Standing conventions given to the AI coding agent                         |
 
 ## Getting started
 
@@ -107,4 +107,4 @@ The frontend is deployed to Vercel from [`frontend/vercel.json`](frontend/vercel
 - [x] Frontend: salary insights (headcount, per-country summary, job-title breakdown)
 - [x] Frontend: Excel import with row-level error report, and export of the filtered directory
 - [x] Deployment: API on Render, frontend on Vercel, database on Supabase
-- [ ] Video demo
+- [x] Video demo
