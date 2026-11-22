@@ -4,7 +4,7 @@ A web application that lets ACME's HR Manager manage salary data for 10,000 empl
 
 | | |
 |---|---|
-| **Live app** | _coming soon_ |
+| **Live app** | [salary-management-pink.vercel.app](https://salary-management-pink.vercel.app) |
 | **API** | [salary-management-api-fw2q.onrender.com](https://salary-management-api-fw2q.onrender.com/health) (free instance: the first request after a pause can take up to a minute) |
 | **Video demo** | _coming soon_ |
 
@@ -106,4 +106,5 @@ The frontend is deployed to Vercel from [`frontend/vercel.json`](frontend/vercel
 - [x] Frontend: design system, app shell and employee directory with add, edit and delete
 - [x] Frontend: salary insights (headcount, per-country summary, job-title breakdown)
 - [x] Frontend: Excel import with row-level error report, and export of the filtered directory
-- [ ] Deployment and video demo
+- [x] Deployment: API on Render, frontend on Vercel, database on Supabase
+- [ ] Video demo
