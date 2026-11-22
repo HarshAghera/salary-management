@@ -103,6 +103,22 @@ describe('api', () => {
     expect(error).toMatchObject({ status: 0 });
   });
 
+  it('downloads a generated workbook as a file', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('xlsx bytes', { status: 200 })));
+
+    const file = await api.excel.download(api.excel.templateUrl());
+
+    expect(await file.text()).toBe('xlsx bytes');
+  });
+
+  it('reports a failed download as an ApiError', async () => {
+    mockFetch(400, { statusCode: 400, message: 'country must be one of: US, GB' });
+
+    const error = await api.excel.download(api.excel.exportUrl({ country: 'XX' })).catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ status: 400, message: 'country must be one of: US, GB' });
+  });
+
   it('builds the export link with the current filters', () => {
     expect(api.excel.exportUrl({ country: 'IN', sortBy: 'salary', sortOrder: 'desc' })).toBe(
       `${API_URL}/excel/export?country=IN&sortBy=salary&sortOrder=desc`,

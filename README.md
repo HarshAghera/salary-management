@@ -98,5 +98,5 @@ The free instance sleeps after 15 minutes without traffic, so the first request 
 - [x] Backend: Excel import / export
 - [x] Frontend: design system, app shell and employee directory with add, edit and delete
 - [x] Frontend: salary insights (headcount, per-country summary, job-title breakdown)
-- [ ] Frontend: Excel import / export
+- [x] Frontend: Excel import with row-level error report, and export of the filtered directory
 - [ ] Deployment and video demo

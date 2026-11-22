@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import PersonSearchOutlinedIcon from '@mui/icons-material/PersonSearchOutlined';
 import { Alert, Button, Card, Snackbar, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -13,6 +14,7 @@ import { EmployeeFormDialog } from './EmployeeFormDialog';
 import { EmployeeTable } from './EmployeeTable';
 import { useEmployeeFeed, useEmployeePage, useFilterOptions } from './queries';
 import { useDirectoryState } from './useDirectoryState';
+import { useExportEmployees } from '../import-export/queries';
 
 /**
  * A dialog keeps showing its employee while it animates closed, so "open" is tracked
@@ -58,7 +60,8 @@ export function EmployeesPage() {
 
   const [form, setForm] = useState<DialogTarget>(CLOSED);
   const [deletion, setDeletion] = useState<DialogTarget>(CLOSED);
-  const [message, setMessage] = useState<string>();
+  const [message, setMessage] = useState<{ text: string; severity: 'success' | 'error' }>();
+  const exporter = useExportEmployees();
 
   const countryNames = useMemo(
     () => new Map((options.data?.countries ?? []).map((country) => [country.code, country.name])),
@@ -86,14 +89,30 @@ export function EmployeesPage() {
         title="Employees"
         description="Find, add and update employees and their salaries."
         actions={
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setForm((current) => ({ open: true, key: current.key + 1 }))}
-            fullWidth={isPhone}
-          >
-            Add employee
-          </Button>
+          <>
+            {/* Exports what is on screen: the same search, filters and sort (ADR-12). */}
+            <Button
+              variant="outlined"
+              startIcon={<FileDownloadOutlinedIcon />}
+              onClick={() =>
+                exporter.mutate(toDirectoryFilters(state), {
+                  onError: (error) => setMessage({ text: `Export failed. ${error.message}`, severity: 'error' }),
+                })
+              }
+              loading={exporter.isPending}
+              fullWidth={isPhone}
+            >
+              {activeFilterCount(state) > 0 ? 'Export filtered list' : 'Export'}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setForm((current) => ({ open: true, key: current.key + 1 }))}
+              fullWidth={isPhone}
+            >
+              Add employee
+            </Button>
+          </>
         }
       />
 
@@ -154,7 +173,7 @@ export function EmployeesPage() {
         onClose={() => setForm((current) => ({ ...current, open: false }))}
         onSaved={(employee, action) => {
           setForm((current) => ({ ...current, open: false }));
-          setMessage(`${employee.fullName} ${action === 'added' ? 'added' : 'updated'}`);
+          setMessage({ text: `${employee.fullName} ${action}`, severity: 'success' });
         }}
       />
       <DeleteEmployeeDialog
@@ -163,7 +182,7 @@ export function EmployeesPage() {
         onClose={() => setDeletion((current) => ({ ...current, open: false }))}
         onDeleted={(employee) => {
           setDeletion((current) => ({ ...current, open: false }));
-          setMessage(`${employee.fullName} deleted`);
+          setMessage({ text: `${employee.fullName} deleted`, severity: 'success' });
         }}
       />
 
@@ -173,8 +192,13 @@ export function EmployeesPage() {
         onClose={() => setMessage(undefined)}
         anchorOrigin={{ vertical: 'bottom', horizontal: isPhone ? 'center' : 'left' }}
       >
-        <Alert severity="success" variant="filled" onClose={() => setMessage(undefined)} sx={{ width: '100%' }}>
-          {message}
+        <Alert
+          severity={message?.severity ?? 'success'}
+          variant="filled"
+          onClose={() => setMessage(undefined)}
+          sx={{ width: '100%' }}
+        >
+          {message?.text}
         </Alert>
       </Snackbar>
     </>

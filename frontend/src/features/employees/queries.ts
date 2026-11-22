@@ -42,7 +42,7 @@ export function useFilterOptions() {
 }
 
 /** After any change to employees, the directory and the salary insights are both out of date. */
-function useRefreshAfterChange() {
+export function useRefreshAfterEmployeeChange() {
   const queryClient = useQueryClient();
   return () =>
     Promise.all([
@@ -53,7 +53,7 @@ function useRefreshAfterChange() {
 
 /** Creates an employee, or updates one when an id is given. */
 export function useSaveEmployee() {
-  const refresh = useRefreshAfterChange();
+  const refresh = useRefreshAfterEmployeeChange();
   return useMutation({
     mutationFn: ({ id, input }: { id?: string; input: EmployeeInput }): Promise<Employee> =>
       id ? api.employees.update(id, input) : api.employees.create(input),
@@ -62,7 +62,7 @@ export function useSaveEmployee() {
 }
 
 export function useDeleteEmployee() {
-  const refresh = useRefreshAfterChange();
+  const refresh = useRefreshAfterEmployeeChange();
   return useMutation({
     mutationFn: (id: string) => api.employees.remove(id),
     onSuccess: refresh,

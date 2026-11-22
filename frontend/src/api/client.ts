@@ -94,6 +94,20 @@ export const api = {
   excel: {
     templateUrl: () => `${API_URL}/excel/template`,
     exportUrl: (filters: DirectoryFilters) => `${API_URL}/excel/export${toQueryString({ ...filters })}`,
+    /** Fetches a generated workbook, so the screen can show progress and report failures. */
+    download: async (url: string): Promise<Blob> => {
+      let response: Response;
+      try {
+        response = await fetch(url);
+      } catch {
+        throw new ApiError(0, 'Cannot reach the server. Check your connection and try again.');
+      }
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as ErrorBody | null;
+        throw new ApiError(response.status, errorMessage(body, response));
+      }
+      return response.blob();
+    },
     import: (file: File) => {
       const form = new FormData();
       form.append('file', file);

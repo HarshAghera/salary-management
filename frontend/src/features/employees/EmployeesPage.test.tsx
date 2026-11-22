@@ -4,8 +4,15 @@ import { useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { api, ApiError } from '../../api/client';
 import type { Employee, EmployeePage, FilterOptions } from '../../api/types';
+import { saveFile } from '../../lib/download';
 import { renderWithProviders, setScreen } from '../../test/render';
 import { EmployeesPage } from './EmployeesPage';
+
+// The browser's "save file" step has no meaning in jsdom; tests check what would be saved.
+vi.mock('../../lib/download', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/download')>()),
+  saveFile: vi.fn(),
+}));
 
 const OPTIONS: FilterOptions = {
   countries: [
@@ -277,6 +284,21 @@ describe('Employee directory', () => {
 
     await screen.findByText('Priya Nair');
     expect(screen.queryByText(/Choose a country to compare salaries/)).not.toBeInTheDocument();
+  });
+
+  it('exports exactly the employees on screen: same search, filters and sort', async () => {
+    setScreen('desktop');
+    mockApi();
+    const download = vi.spyOn(api.excel, 'download').mockResolvedValue(new Blob(['export']));
+    renderPage('/employees?country=IN&search=nair&sortBy=salary&sortOrder=desc');
+    await screen.findByText('Priya Nair');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export filtered list' }));
+
+    expect(download).toHaveBeenCalledWith(
+      api.excel.exportUrl({ search: 'nair', country: 'IN', sortBy: 'salary', sortOrder: 'desc' }),
+    );
+    expect(saveFile).toHaveBeenCalled();
   });
 
   it('shows only the essential columns on tablets', async () => {
