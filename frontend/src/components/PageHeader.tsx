@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { usePageTitle } from '../app/usePageTitle';
 
 interface PageHeaderProps {
   title: string;
@@ -9,6 +10,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
+  usePageTitle(title);
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}

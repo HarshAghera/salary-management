@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -116,7 +116,13 @@ async function fillEmployeeForm(dialog: HTMLElement) {
   await enter(within(dialog).getByRole('combobox', { name: /Department/ }), 'Engineering');
   await chooseOption(within(dialog).getByRole('combobox', { name: /Country/ }), 'India');
   await enter(within(dialog).getByLabelText(/Annual salary/), '2450000');
-  fireEvent.change(within(dialog).getByLabelText(/Hire date/), { target: { value: '2021-03-01' } });
+  await enterHireDate(dialog, '01', '03', '2021');
+}
+
+/** Types a date into the picker's Day, Month and Year parts, as someone using the keyboard would. */
+async function enterHireDate(dialog: HTMLElement, day: string, month: string, year: string) {
+  await userEvent.click(within(dialog).getByRole('spinbutton', { name: 'Day' }));
+  await userEvent.keyboard(`${day}${month}${year}`);
 }
 
 afterEach(() => {
@@ -157,6 +163,19 @@ describe('Employee directory', () => {
     await waitFor(() =>
       expect(list).toHaveBeenCalledWith(expect.objectContaining({ country: 'IN', search: 'nair', page: 2 })),
     );
+  });
+
+  it('never shows "All countries" for a filtered link while the country names are loading', async () => {
+    setScreen('desktop');
+    const { filterOptions } = mockApi();
+    filterOptions.mockReturnValue(new Promise(() => undefined));
+    const warn = vi.spyOn(console, 'warn');
+
+    renderPage('/employees?country=GB');
+
+    await screen.findByText('Priya Nair');
+    expect(screen.getByRole('combobox', { name: /Country/ })).toHaveTextContent('GB');
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('out-of-range value'));
   });
 
   it('searches once typing stops rather than on every keystroke', async () => {
@@ -242,6 +261,22 @@ describe('Employee directory', () => {
     await waitFor(() =>
       expect(list.mock.lastCall?.[0]).toEqual({ page: 1, pageSize: 25, sortBy: 'fullName', sortOrder: 'asc' }),
     );
+  });
+
+  it('moves to the next page', async () => {
+    setScreen('desktop');
+    const { list } = mockApi();
+    list.mockResolvedValue(pageOf([priya, amelia], { total: 100 }));
+    renderPage();
+    await screen.findByText('Priya Nair');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
+
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 })));
+    // The grid adjusts its page after a short delay; the new page must survive that.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+    expect(screen.getByText('26–50 of 100')).toBeInTheDocument();
   });
 
   it('sorts by salary from the column header', async () => {
@@ -408,6 +443,21 @@ describe('Adding, editing and deleting employees', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it('asks for the hire date when it is only partly typed', async () => {
+    setScreen('desktop');
+    const { create } = mockApi();
+    renderPage();
+    await userEvent.click(screen.getByRole('button', { name: 'Add employee' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Add employee' });
+    await userEvent.click(within(dialog).getByRole('spinbutton', { name: 'Day' }));
+    await userEvent.keyboard('15');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add employee' }));
+
+    expect(within(dialog).getByText('Enter the hire date')).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('shows a duplicate email next to the email field', async () => {
     setScreen('desktop');
     const { create } = mockApi();
@@ -453,6 +503,39 @@ describe('Adding, editing and deleting employees', () => {
 
     expect(remove).toHaveBeenCalledWith('emp-1');
     expect(await screen.findByText('Priya Nair deleted')).toBeInTheDocument();
+  });
+
+  it('treats deleting someone already deleted elsewhere as done, and refreshes the list', async () => {
+    setScreen('desktop');
+    const { list, remove } = mockApi();
+    remove.mockRejectedValue(new ApiError(404, 'Employee emp-1 not found'));
+    renderPage();
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete Priya Nair' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Delete Priya Nair?' });
+    const callsBefore = list.mock.calls.length;
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByText('Priya Nair was already deleted')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(callsBefore));
+    expect(screen.queryByText(/emp-1/)).not.toBeInTheDocument();
+  });
+
+  it('explains without internal IDs when the employee being edited no longer exists', async () => {
+    setScreen('desktop');
+    const { list, update } = mockApi();
+    update.mockRejectedValue(new ApiError(404, 'Employee emp-1 not found'));
+    renderPage();
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit Priya Nair' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Edit employee' });
+    const callsBefore = list.mock.calls.length;
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }));
+
+    expect(await within(dialog).findByText(/no longer exists/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/emp-1/)).not.toBeInTheDocument();
+    await waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(callsBefore));
   });
 
   it('keeps the employee when deletion is cancelled', async () => {

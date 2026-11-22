@@ -56,6 +56,10 @@ function toFieldValue(column: ImportColumn, value: CellValue): unknown {
   return typeof value === 'number' ? String(value) : value;
 }
 
+function isBlank(value: unknown): boolean {
+  return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+}
+
 /** class-validator messages start with the property name; HR sees the column header instead. */
 function columnMessage(column: ImportColumn, message: string): string {
   return message.replace(new RegExp(`^${column.key}\\b`), column.header);
@@ -114,6 +118,12 @@ export async function parseImportRows(rows: SheetRow[]): Promise<ImportParseResu
 
     for (const failure of failures) {
       const column = IMPORT_COLUMNS.find((c) => c.key === failure.property)!;
+      // A blank cell fails every rule at once, and the first of them ("too long", "not a
+      // country") would mislead. Say plainly that the value is required.
+      if (isBlank(fields[column.key])) {
+        errors.push({ row: row.rowNumber, column: column.header, message: `${column.header} is required` });
+        continue;
+      }
       const [firstMessage] = Object.values(failure.constraints ?? {});
       errors.push({ row: row.rowNumber, column: column.header, message: columnMessage(column, firstMessage) });
     }

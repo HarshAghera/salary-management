@@ -84,7 +84,11 @@ function FilterSelect({
   choices: { value: string; label: string }[];
   onSelect: (value: string) => void;
 }) {
-  const selected = choices.find((choice) => choice.value === value);
+  // Until the options arrive (or if the address names one no longer in use), keep the chosen
+  // value as an option of its own, so the field shows it rather than "All countries".
+  const known = !value || choices.some((choice) => choice.value === value);
+  const shown = known ? choices : [{ value, label: value }, ...choices];
+  const selected = shown.find((choice) => choice.value === value);
   return (
     <TextField
       select
@@ -104,7 +108,7 @@ function FilterSelect({
       }}
     >
       <MenuItem value="">{allLabel}</MenuItem>
-      {choices.map((choice) => (
+      {shown.map((choice) => (
         <MenuItem key={choice.value} value={choice.value}>
           {choice.label}
         </MenuItem>

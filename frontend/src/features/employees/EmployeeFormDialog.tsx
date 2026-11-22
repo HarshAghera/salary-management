@@ -14,6 +14,8 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useState, type FormEvent } from 'react';
 import { ApiError } from '../../api/client';
 import type { Employee, FilterOptions } from '../../api/types';
@@ -25,7 +27,11 @@ import {
   type EmployeeFormErrors,
   type EmployeeFormValues,
 } from './employeeForm';
-import { useSaveEmployee } from './queries';
+import { isEmployeeGone, useSaveEmployee } from './queries';
+
+/** "01 Mar 2021": the month as a word, so day and month can never be read the wrong way round. */
+const HIRE_DATE_FORMAT = 'DD MMM YYYY';
+const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -70,6 +76,9 @@ export function EmployeeFormDialog({ open, employee, options, onClose, onSaved }
   const [values, setValues] = useState<EmployeeFormValues>(() =>
     employee ? formFromEmployee(employee) : EMPTY_EMPLOYEE_FORM,
   );
+  const [hireDate, setHireDate] = useState<Dayjs | null>(() =>
+    employee && isoDate.test(employee.hireDate) ? dayjs(employee.hireDate) : null,
+  );
   const [errors, setErrors] = useState<EmployeeFormErrors>({});
   const [formError, setFormError] = useState<string>();
 
@@ -96,6 +105,10 @@ export function EmployeeFormDialog({ open, employee, options, onClose, onSaved }
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setErrors({ email: error.message });
+          } else if (isEmployeeGone(error)) {
+            setFormError(
+              'This employee no longer exists. Someone else may have deleted them, so these changes cannot be saved.',
+            );
           } else {
             setFormError(error.message);
           }
@@ -163,6 +176,10 @@ export function EmployeeFormDialog({ open, employee, options, onClose, onSaved }
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField select label="Country" {...field('countryCode')}>
+                {/* Editing can start before the country list arrives; keep the saved code selectable meanwhile. */}
+                {values.countryCode && !options?.countries.some((country) => country.code === values.countryCode) && (
+                  <MenuItem value={values.countryCode}>{values.countryCode}</MenuItem>
+                )}
                 {(options?.countries ?? []).map((country) => (
                   <MenuItem key={country.code} value={country.code}>
                     {country.name}
@@ -184,7 +201,26 @@ export function EmployeeFormDialog({ open, employee, options, onClose, onSaved }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField label="Hire date" type="date" {...field('hireDate')} slotProps={{ inputLabel: { shrink: true } }} />
+              {/* MUI's picker rather than the browser's, so the calendar follows the app's theme and dark mode. */}
+            <DatePicker
+              label="Hire date"
+              format={HIRE_DATE_FORMAT}
+              value={hireDate}
+              onChange={(date) => {
+                // The picker keeps what was typed; the form gets an ISO date, or "invalid" for an
+                // unfinished or impossible one so validation can say "Enter a real date".
+                setHireDate(date);
+                set('hireDate')(date === null ? '' : date.isValid() ? date.format('YYYY-MM-DD') : 'invalid');
+              }}
+              slotProps={{
+                textField: {
+                  required: true,
+                  fullWidth: true,
+                  error: Boolean(errors.hireDate),
+                  helperText: errors.hireDate,
+                },
+              }}
+            />
             </Grid>
           </Grid>
         </DialogContent>

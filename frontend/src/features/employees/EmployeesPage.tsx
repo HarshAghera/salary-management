@@ -3,18 +3,25 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import PersonSearchOutlinedIcon from '@mui/icons-material/PersonSearchOutlined';
 import { Alert, Button, Card, Snackbar, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import type { Employee } from '../../api/types';
 import { PageHeader } from '../../components/PageHeader';
 import { DeleteEmployeeDialog } from './DeleteEmployeeDialog';
 import { activeFilterCount, toDirectoryFilters, toDirectoryParams, type DirectoryState } from './directoryState';
 import { EmployeeCards } from './EmployeeCards';
 import { EmployeeFilters } from './EmployeeFilters';
-import { EmployeeFormDialog } from './EmployeeFormDialog';
 import { EmployeeTable } from './EmployeeTable';
 import { useEmployeeFeed, useEmployeePage, useFilterOptions } from './queries';
 import { useDirectoryState } from './useDirectoryState';
 import { useExportEmployees } from '../import-export/queries';
+
+/**
+ * The form, with its date picker, loads the first time someone adds or edits an employee,
+ * so the directory itself opens without it.
+ */
+const EmployeeFormDialog = lazy(() =>
+  import('./EmployeeFormDialog').then((module) => ({ default: module.EmployeeFormDialog })),
+);
 
 /**
  * A dialog keeps showing its employee while it animates closed, so "open" is tracked
@@ -60,7 +67,7 @@ export function EmployeesPage() {
 
   const [form, setForm] = useState<DialogTarget>(CLOSED);
   const [deletion, setDeletion] = useState<DialogTarget>(CLOSED);
-  const [message, setMessage] = useState<{ text: string; severity: 'success' | 'error' }>();
+  const [message, setMessage] = useState<{ text: string; severity: 'success' | 'info' | 'error' }>();
   const exporter = useExportEmployees();
 
   const countryNames = useMemo(
@@ -165,24 +172,33 @@ export function EmployeesPage() {
         />
       )}
 
-      <EmployeeFormDialog
-        key={`form-${form.key}`}
-        open={form.open}
-        employee={form.employee}
-        options={options.data}
-        onClose={() => setForm((current) => ({ ...current, open: false }))}
-        onSaved={(employee, action) => {
-          setForm((current) => ({ ...current, open: false }));
-          setMessage({ text: `${employee.fullName} ${action}`, severity: 'success' });
-        }}
-      />
+      {/* key 0 means the form has never been opened, so its code is not fetched yet. */}
+      {form.key > 0 && (
+        <Suspense fallback={null}>
+          <EmployeeFormDialog
+            key={`form-${form.key}`}
+            open={form.open}
+            employee={form.employee}
+            options={options.data}
+            onClose={() => setForm((current) => ({ ...current, open: false }))}
+            onSaved={(employee, action) => {
+              setForm((current) => ({ ...current, open: false }));
+              setMessage({ text: `${employee.fullName} ${action}`, severity: 'success' });
+            }}
+          />
+        </Suspense>
+      )}
       <DeleteEmployeeDialog
         open={deletion.open}
         employee={deletion.employee}
         onClose={() => setDeletion((current) => ({ ...current, open: false }))}
-        onDeleted={(employee) => {
+        onDeleted={(employee, alreadyGone) => {
           setDeletion((current) => ({ ...current, open: false }));
-          setMessage({ text: `${employee.fullName} deleted`, severity: 'success' });
+          setMessage(
+            alreadyGone
+              ? { text: `${employee.fullName} was already deleted`, severity: 'info' }
+              : { text: `${employee.fullName} deleted`, severity: 'success' },
+          );
         }}
       />
 

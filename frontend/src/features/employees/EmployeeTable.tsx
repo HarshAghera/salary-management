@@ -105,8 +105,17 @@ export function EmployeeTable({
     [countryName, onEdit, onDelete],
   );
 
-  const paginationModel: GridPaginationModel = { page: state.page - 1, pageSize: state.pageSize };
-  const sortModel: GridSortModel = [{ field: state.sortBy, sort: state.sortOrder }];
+  // Both models keep their identity until their values change. The grid treats a new sort
+  // model as a new sort and jumps back to the first page, so rebuilding it on every render
+  // would undo every page change.
+  const paginationModel = useMemo<GridPaginationModel>(
+    () => ({ page: state.page - 1, pageSize: state.pageSize }),
+    [state.page, state.pageSize],
+  );
+  const sortModel = useMemo<GridSortModel>(
+    () => [{ field: state.sortBy, sort: state.sortOrder }],
+    [state.sortBy, state.sortOrder],
+  );
 
   return (
     <Card>
@@ -118,13 +127,18 @@ export function EmployeeTable({
         paginationMode="server"
         sortingMode="server"
         paginationModel={paginationModel}
-        onPaginationModelChange={(model) => onChange({ page: model.page + 1, pageSize: model.pageSize })}
+        onPaginationModelChange={(model) => {
+          // The grid can echo the current page back; only a real change becomes navigation.
+          if (model.page === paginationModel.page && model.pageSize === paginationModel.pageSize) return;
+          onChange({ page: model.page + 1, pageSize: model.pageSize });
+        }}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         sortModel={sortModel}
         // Always sorted: clicking a sorted header flips the direction instead of removing the sort.
         sortingOrder={['asc', 'desc']}
         onSortModelChange={([sort]) => {
-          if (sort?.sort) onChange({ sortBy: sort.field as SortField, sortOrder: sort.sort });
+          if (!sort?.sort || (sort.field === state.sortBy && sort.sort === state.sortOrder)) return;
+          onChange({ sortBy: sort.field as SortField, sortOrder: sort.sort });
         }}
         columnVisibilityModel={{ department: !essentialColumnsOnly, hireDate: !essentialColumnsOnly }}
         rowHeight={64}
@@ -133,6 +147,8 @@ export function EmployeeTable({
         disableVirtualization
         disableColumnMenu
         disableColumnFilter
+        // Columns size themselves to the screen, so there is nothing to resize.
+        disableColumnResize
         disableRowSelectionOnClick
         localeText={{
           noRowsLabel: 'No employees match your search and filters',
@@ -143,7 +159,13 @@ export function EmployeeTable({
           border: 0,
           '--DataGrid-containerBackground': 'transparent',
           '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600, color: 'text.secondary' },
+          // The header's bottom border already separates it; the divider after the last column
+          // also stuck out of the grid and caused a few pixels of sideways scroll.
+          '& .MuiDataGrid-columnSeparator': { display: 'none' },
           '& .salary-cell': { fontWeight: 600, fontVariantNumeric: 'tabular-nums' },
+          // Rows-per-page is a touch target like any other control (44 px, CLAUDE.md).
+          '& .MuiTablePagination-input': { minHeight: 44 },
+          '& .MuiTablePagination-select': { display: 'flex', alignItems: 'center', minHeight: 44, boxSizing: 'border-box' },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
           '& .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-columnHeader:focus-visible': {
             outline: '2px solid',

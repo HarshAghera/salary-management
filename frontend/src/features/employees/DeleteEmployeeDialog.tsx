@@ -8,13 +8,14 @@ import {
   DialogTitle,
 } from '@mui/material';
 import type { Employee } from '../../api/types';
-import { useDeleteEmployee } from './queries';
+import { isEmployeeGone, useDeleteEmployee } from './queries';
 
 interface DeleteEmployeeDialogProps {
   open: boolean;
   employee: Employee | undefined;
   onClose: () => void;
-  onDeleted: (employee: Employee) => void;
+  /** `alreadyGone` when someone else deleted the employee first: the outcome HR wanted anyway. */
+  onDeleted: (employee: Employee, alreadyGone: boolean) => void;
 }
 
 /** Deletion is permanent, so it always asks first and names the person. */
@@ -23,7 +24,12 @@ export function DeleteEmployeeDialog({ open, employee, onClose, onDeleted }: Del
 
   const handleDelete = () => {
     if (!employee) return;
-    remove.mutate(employee.id, { onSuccess: () => onDeleted(employee) });
+    remove.mutate(employee.id, {
+      onSuccess: () => onDeleted(employee, false),
+      onError: (error) => {
+        if (isEmployeeGone(error)) onDeleted(employee, true);
+      },
+    });
   };
 
   return (
@@ -39,7 +45,7 @@ export function DeleteEmployeeDialog({ open, employee, onClose, onDeleted }: Del
     >
       <DialogTitle id="delete-employee-title">Delete {employee?.fullName}?</DialogTitle>
       <DialogContent>
-        {remove.error && (
+        {remove.error && !isEmployeeGone(remove.error) && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {remove.error.message}
           </Alert>

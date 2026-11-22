@@ -1,7 +1,9 @@
 import { ThemeProvider } from '@mui/material/styles';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import { StrictMode, type ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
 import { theme } from '../theme';
@@ -12,12 +14,17 @@ export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?:
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+  // StrictMode as in main.tsx, so tests see the same double-invoked effects as the running app.
   return render(
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme} defaultMode="system">
-        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
-      </ThemeProvider>
-    </QueryClientProvider>,
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme} defaultMode="system">
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </StrictMode>,
   );
 }
 

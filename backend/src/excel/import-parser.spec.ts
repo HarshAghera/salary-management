@@ -87,8 +87,29 @@ describe('parseImportRows', () => {
 
     expect(result).toEqual({
       kind: 'row-errors',
-      errors: [{ row: 2, column: 'Job title', message: expect.any(String) }],
+      errors: [{ row: 2, column: 'Job title', message: 'Job title is required' }],
     });
+  });
+
+  it.each(HEADER.map((header, index) => [header, index] as const))(
+    'says an empty %s cell is required, not that it is too long or the wrong type',
+    async (header, index) => {
+      const row = [...VALID];
+      row[index] = null;
+
+      const result = await parseImportRows(sheet(HEADER, row));
+
+      expect(result).toEqual({ kind: 'row-errors', errors: [{ row: 2, column: header, message: `${header} is required` }] });
+    },
+  );
+
+  it('treats a cell of only spaces as empty', async () => {
+    const row = [...VALID];
+    row[0] = '   ';
+
+    const result = await parseImportRows(sheet(HEADER, row));
+
+    expect(result).toEqual({ kind: 'row-errors', errors: [{ row: 2, column: 'Full name', message: 'Full name is required' }] });
   });
 
   it('rejects an email that appears twice in the file, ignoring letter case', async () => {

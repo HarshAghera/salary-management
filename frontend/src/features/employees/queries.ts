@@ -1,5 +1,5 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../api/client';
+import { api, ApiError } from '../../api/client';
 import type { DirectoryFilters, DirectoryParams, Employee, EmployeeInput } from '../../api/types';
 import { insightKeys } from '../insights/queries';
 
@@ -51,6 +51,11 @@ export function useRefreshAfterEmployeeChange() {
     ]);
 }
 
+/** The employee was deleted elsewhere (another tab, another person) after this screen loaded. */
+export function isEmployeeGone(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 /** Creates an employee, or updates one when an id is given. */
 export function useSaveEmployee() {
   const refresh = useRefreshAfterEmployeeChange();
@@ -58,6 +63,8 @@ export function useSaveEmployee() {
     mutationFn: ({ id, input }: { id?: string; input: EmployeeInput }): Promise<Employee> =>
       id ? api.employees.update(id, input) : api.employees.create(input),
     onSuccess: refresh,
+    // A record that has gone should disappear from the list too.
+    onError: (error) => (isEmployeeGone(error) ? refresh() : undefined),
   });
 }
 
@@ -66,5 +73,6 @@ export function useDeleteEmployee() {
   return useMutation({
     mutationFn: (id: string) => api.employees.remove(id),
     onSuccess: refresh,
+    onError: (error) => (isEmployeeGone(error) ? refresh() : undefined),
   });
 }

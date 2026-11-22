@@ -81,6 +81,16 @@ describe('App shell', () => {
     expect(await screen.findByRole('button', { name: /^Switch to (light|dark) mode$/ })).toBeVisible();
   });
 
+  it('names each page in the browser tab', async () => {
+    setScreen('desktop');
+    renderWithProviders(<App />, { route: '/employees' });
+    expect(document.title).toBe('Employees · ACME Salary Management');
+
+    await userEvent.click(screen.getByRole('link', { name: 'Insights' }));
+
+    expect(document.title).toBe('Salary insights · ACME Salary Management');
+  });
+
   it('shows a helpful page for an unknown address', () => {
     setScreen('desktop');
 

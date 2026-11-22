@@ -177,6 +177,7 @@ Short records of significant decisions: the context, what was decided, and the t
 - ➕ Both schemes come from one theme definition, so every component and later screen inherits them.
 - ➕ Navigation across the top leaves the full page width for the employee table.
 - ➖ Every new colour must fit the palette rules; status colours must not be reused as decoration.
+- ➖ Browser-drawn controls cannot be themed, so the hire date uses MUI's date picker (with dayjs) instead of the native date input. It adds a dependency, in exchange for a calendar that matches the palette, the typeface and dark mode, and a typed date format ("01 Mar 2021") that cannot be misread as month-first or day-first.
 - ➖ White text on the top bar limits how light the brand can be: `#0F766E` gives 5.5:1 contrast, so paler teals are not used for the bar.
 - ➖ The bundled font adds about 31 KB on first load (four weights of the Latin subset; other scripts load only if a page uses them), in exchange for consistent typography and no third-party request.
 

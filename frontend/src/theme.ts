@@ -1,4 +1,6 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
+// Lets the theme style the date picker's parts (MuiPickerPopper, MuiPickersDay) with type checking.
+import type {} from '@mui/x-date-pickers/themeAugmentation';
 
 const FONT_FAMILY = '"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
@@ -118,6 +120,18 @@ export const theme = responsiveFontSizes(
         styleOverrides: { tooltip: ({ theme }) => ({ fontSize: theme.typography.pxToRem(12), borderRadius: 8 }) },
       },
       MuiDialog: { styleOverrides: { paper: { borderRadius: 16 } } },
+      // The date picker's calendar floats above a dialog, so unlike flat cards it needs an edge and a lift.
+      MuiPickerPopper: {
+        styleOverrides: {
+          paper: ({ theme }) => ({
+            borderRadius: 16,
+            border: `1px solid ${theme.vars.palette.divider}`,
+            boxShadow: '0 12px 32px rgba(16, 35, 31, 0.16)',
+            ...theme.applyStyles('dark', { boxShadow: '0 12px 32px rgba(0, 0, 0, 0.5)' }),
+          }),
+        },
+      },
+      MuiPickersDay: { styleOverrides: { root: { fontWeight: 500 } } },
     },
   }),
 );
